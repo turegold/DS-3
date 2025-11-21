@@ -277,6 +277,20 @@ bool Manager::mDFS(char option, int vertex)
 
 bool Manager::mDIJKSTRA(char option, int vertex)
 {
+	if (!load || graph == nullptr)
+	{
+		printErrorCode(600);
+		return false;
+	}
+
+	// Dijkstra 내부에서 실패한 경우 (음수 간선 포함 등)
+	if (!Dijkstra(graph, option, vertex, &fout))
+	{
+		printErrorCode(600);
+		return false;
+	}
+
+	return true;
 }
 
 bool Manager::mKRUSKAL()

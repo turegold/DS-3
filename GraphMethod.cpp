@@ -273,6 +273,140 @@ bool Kruskal(Graph *graph, ofstream *fout)
 
 bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
 {
+    int n = graph->getSize();
+    const int INF = 1e9;
+
+    // ------------------------------
+    // [1] 음수 가중치가 있으면 Dijkstra 불가능 → false 반환
+    //     (그래프 전체에서 음수 간선이 있는지 검사)
+    // ------------------------------
+    for (int u = 0; u < n; u++)
+    {
+        map<int, int> adj;
+        graph->getAdjacentEdgesDirect(u, &adj); // 음수 검사에는 방향 중요하지 않음
+
+        for (auto &p : adj)
+        {
+            // 음수 가중치 존재
+            if (p.second < 0)
+            {
+                return false;
+            }
+        }
+    }
+
+    // ------------------------------
+    // [2] Dijkstra 준비
+    // ------------------------------
+    vector<int> dist(n, INF); // 최단 거리
+    vector<int> prev(n, -1);  // 경로 복원용
+    priority_queue<pair<int, int>,
+                   vector<pair<int, int>>,
+                   greater<pair<int, int>>>
+        pq;
+
+    // 시작점 설정
+    dist[vertex] = 0;
+    pq.push({0, vertex});
+
+    // ------------------------------
+    // [4] Dijkstra 실행
+    // ------------------------------
+    while (!pq.empty())
+    {
+        auto [cost, cur] = pq.top();
+        pq.pop();
+
+        if (cost > dist[cur])
+            continue;
+
+        // 인접 정점들 가져오기
+        map<int, int> adj;
+
+        if (option == 'O')
+            graph->getAdjacentEdgesDirect(cur, &adj); // 방향 O
+        else
+            graph->getAdjacentEdges(cur, &adj); // 방향 X (무방향)
+
+        // Relaxation
+        for (auto &p : adj)
+        {
+            int next = p.first;
+            int weight = p.second;
+
+            if (dist[next] > dist[cur] + weight)
+            {
+                dist[next] = dist[cur] + weight;
+                prev[next] = cur;
+                pq.push({dist[next], next});
+            }
+        }
+    }
+
+    // ------------------------------
+    // [5] 결과 출력 시작
+    // ------------------------------
+    *fout << "========DIJKSTRA========" << endl;
+
+    if (option == 'O')
+        *fout << "Directed Graph Dijkstra" << endl;
+    else
+        *fout << "Undirected Graph Dijkstra" << endl;
+
+    *fout << "Start: " << vertex << endl;
+
+    // ------------------------------
+    // [6] 각 정점에 대해 경로 출력
+    // ------------------------------
+    for (int v = 0; v < n; v++)
+    {
+        *fout << "[" << v << "] ";
+
+        if (dist[v] == INF)
+        {
+            // 도달 불가능
+            *fout << "x" << endl;
+            continue;
+        }
+
+        // dist[v] == 0 → 시작 정점
+        if (v == vertex)
+        {
+            *fout << v << " (0)" << endl;
+            continue;
+        }
+
+        // ------------------------------
+        // 경로 복원 (역순)
+        // ------------------------------
+        vector<int> path;
+        int cur = v;
+
+        while (cur != -1)
+        {
+            path.push_back(cur);
+            cur = prev[cur];
+        }
+
+        reverse(path.begin(), path.end());
+
+        // ------------------------------
+        // 경로 출력
+        // ------------------------------
+        for (int i = 0; i < path.size(); i++)
+        {
+            *fout << path[i];
+            if (i != path.size() - 1)
+                *fout << " -> ";
+        }
+
+        *fout << " (" << dist[v] << ")" << endl;
+    }
+
+    *fout << "====================" << endl;
+    *fout << endl;
+
+    return true;
 }
 
 bool Bellmanford(Graph *graph, char option, int s_vertex, int e_vertex, ofstream *fout)
