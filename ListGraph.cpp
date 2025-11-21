@@ -78,7 +78,5 @@ bool ListGraph::printGraph(ofstream *fout) // Definition of print Graph
         (*fout) << "\n";
     }
 
-    (*fout) << "\n"; // 마지막 줄 공백 한 줄
-
     return true;
 }
