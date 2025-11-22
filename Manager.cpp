@@ -88,10 +88,10 @@ void Manager::run(const char *command_txt)
 		{
 			mCentrality();
 		}
-		else
+		else if (cmd == "EXIT")
 		{
-			// 잘못된 명령어 → 에러 출력
-			printErrorCode(200);
+			EXIT();
+			break;
 		}
 	}
 
@@ -105,11 +105,10 @@ bool Manager::LOAD(const char *filename)
 	ifstream fin(filename);
 	if (!fin.is_open())
 	{
-		printErrorCode(100); // file open error
+		printErrorCode(100);
 		return false;
 	}
 
-	// 기존 그래프가 있으면 삭제
 	if (load && graph != nullptr)
 	{
 		delete graph;
@@ -123,14 +122,13 @@ bool Manager::LOAD(const char *filename)
 	fin >> typeChar; // L or M
 	fin >> size;	 // graph size
 
-	// 예외 처리
 	if (!fin || (typeChar != 'L' && typeChar != 'M') || size <= 0)
 	{
 		printErrorCode(100);
 		return false;
 	}
 
-	// 그래프 객체 생성
+	// Create graph
 	if (typeChar == 'L')
 	{
 		graph = new ListGraph(true, size);
@@ -140,11 +138,11 @@ bool Manager::LOAD(const char *filename)
 		graph = new MatrixGraph(false, size);
 	}
 
-	// L 타입: 인접 리스트 형태
+	// L type
 	if (typeChar == 'L')
 	{
 		string line;
-		getline(fin, line); // 첫 줄 개행 제거
+		getline(fin, line);
 
 		int next_start = -1;
 
@@ -152,7 +150,7 @@ bool Manager::LOAD(const char *filename)
 		{
 			string startLine;
 
-			// 출발 정점 읽기
+			// Read start
 			if (next_start == -1)
 			{
 				if (!getline(fin, startLine))
@@ -166,7 +164,7 @@ bool Manager::LOAD(const char *filename)
 			int start = next_start;
 			next_start = -1;
 
-			// 간선 정보 읽기
+			// Read edge
 			while (true)
 			{
 				streampos pos = fin.tellg();
@@ -185,7 +183,7 @@ bool Manager::LOAD(const char *filename)
 				if (nums.size() == 1)
 				{
 					next_start = nums[0];
-					// 줄 되돌리지 않고, 그대로 다음 cur에서 사용
+
 					break;
 				}
 				else if (nums.size() == 2)
@@ -204,7 +202,7 @@ bool Manager::LOAD(const char *filename)
 	}
 	else
 	{
-		// M 타입: 인접 행렬 형태
+		// M type
 		for (int i = 0; i < size; i++)
 		{
 			for (int j = 0; j < size; j++)
@@ -235,7 +233,6 @@ bool Manager::LOAD(const char *filename)
 
 bool Manager::PRINT()
 {
-	// 저장된 그래프가 없는 경우 에러 출력
 	if (!load || graph == nullptr)
 	{
 		printErrorCode(200);
@@ -244,7 +241,7 @@ bool Manager::PRINT()
 
 	fout << "========PRINT========" << endl;
 
-	// 그래프 출력
+	// Print graph
 	graph->printGraph(&fout);
 
 	fout << "====================" << endl;
@@ -261,6 +258,7 @@ bool Manager::mBFS(char option, int vertex)
 		return false;
 	}
 
+	// Print BFS
 	return BFS(graph, option, vertex, &fout);
 }
 
@@ -272,6 +270,7 @@ bool Manager::mDFS(char option, int vertex)
 		return false;
 	}
 
+	// Print DFS
 	return DFS(graph, option, vertex, &fout);
 }
 
@@ -283,7 +282,7 @@ bool Manager::mDIJKSTRA(char option, int vertex)
 		return false;
 	}
 
-	// Dijkstra 내부에서 실패한 경우 (음수 간선 포함 등)
+	// if Dijkstra fails, print error
 	if (!Dijkstra(graph, option, vertex, &fout))
 	{
 		printErrorCode(600);
@@ -300,23 +299,76 @@ bool Manager::mKRUSKAL()
 		printErrorCode(500);
 		return false;
 	}
+	// if Kruskal fails, print error
 	else if (!Kruskal(graph, &fout))
 	{
 		printErrorCode(500);
 		return false;
 	}
+	return true;
 }
 
 bool Manager::mBELLMANFORD(char option, int s_vertex, int e_vertex)
 {
+	if (!load || graph == nullptr)
+	{
+		printErrorCode(700);
+		return false;
+	}
+
+	// If bellmanford fails, print error
+	if (!Bellmanford(graph, option, s_vertex, e_vertex, &fout))
+	{
+		printErrorCode(700);
+		return false;
+	}
+
+	return true;
 }
 
 bool Manager::mFLOYD(char option)
 {
+	if (!load || graph == nullptr)
+	{
+		printErrorCode(800);
+		return false;
+	}
+
+	// If Floyd fails, print error
+	if (!FLOYD(graph, option, &fout))
+	{
+		printErrorCode(800);
+		return false;
+	}
+
+	return true;
 }
 
 bool Manager::mCentrality()
 {
+	if (!load || graph == nullptr)
+	{
+		printErrorCode(900);
+		return false;
+	}
+
+	// if Centrality fails, print error
+	if (!Centrality(graph, &fout))
+	{
+		printErrorCode(900);
+		return false;
+	}
+	return true;
+}
+
+bool Manager::EXIT()
+{
+	fout << "========EXIT========" << endl;
+	fout << "Success" << endl;
+	fout << "====================" << endl;
+	fout << endl;
+
+	return true;
 }
 
 void Manager::printErrorCode(int n)

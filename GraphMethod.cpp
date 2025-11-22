@@ -7,8 +7,11 @@
 #include <set>
 #include <list>
 #include <utility>
+#include <iomanip>
 
 using namespace std;
+
+const int INF = 1e9;
 
 bool BFS(Graph *graph, char option, int vertex, ofstream *fout)
 {
@@ -30,14 +33,13 @@ bool BFS(Graph *graph, char option, int vertex, ofstream *fout)
     vector<bool> visited(size, false);
     queue<int> Q;
 
-    // 방문처리
+    // Mark starting vertex as visited
     visited[vertex] = true;
     Q.push(vertex);
     bool first = true;
 
     while (!Q.empty())
     {
-        // 하나 꺼내기
         int cur = Q.front();
         Q.pop();
 
@@ -62,10 +64,11 @@ bool BFS(Graph *graph, char option, int vertex, ofstream *fout)
             graph->getAdjacentEdges(cur, &adj);
         }
 
+        // Visit all adjacent vertexes
         for (auto &p : adj)
         {
             int next = p.first;
-            // 방문 안했으면 방문 처리
+
             if (!visited[next])
             {
                 visited[next] = true;
@@ -82,9 +85,8 @@ bool BFS(Graph *graph, char option, int vertex, ofstream *fout)
 
 bool DFS(Graph *graph, char option, int vertex, ofstream *fout)
 {
-    int n = graph->getSize();
+    int size = graph->getSize();
 
-    // 2) DFS 시작 헤더 출력
     *fout << "========DFS========" << endl;
 
     if (option == 'O')
@@ -94,8 +96,7 @@ bool DFS(Graph *graph, char option, int vertex, ofstream *fout)
 
     *fout << "Start: " << vertex << endl;
 
-    // 3) DFS 수행
-    vector<bool> visited(n, false);
+    vector<bool> visited(size, false);
     stack<int> S;
     vector<int> result;
 
@@ -106,7 +107,7 @@ bool DFS(Graph *graph, char option, int vertex, ofstream *fout)
         int cur = S.top();
         S.pop();
 
-        // 이미 방문 했으면 넘어감
+        // Skip nodes that have already been visited
         if (visited[cur])
         {
             continue;
@@ -115,7 +116,6 @@ bool DFS(Graph *graph, char option, int vertex, ofstream *fout)
         visited[cur] = true;
         result.push_back(cur);
 
-        // 인접 정점들 가져오기
         map<int, int> adj;
 
         if (option == 'O')
@@ -127,14 +127,14 @@ bool DFS(Graph *graph, char option, int vertex, ofstream *fout)
             graph->getAdjacentEdges(cur, &adj);
         }
 
-        // DFS는 큰 번호부터 push해야 작은 번호가 먼저 pop됨 (오름차순 방문)
+        // push in reverse-sorted order
         vector<int> neighbors;
         for (auto &p : adj)
         {
             neighbors.push_back(p.first);
         }
 
-        // 주변 정점을 오름차순으로 정렬
+        // Reverse sort so smaller is processed first
         sort(neighbors.begin(), neighbors.end(), greater<int>());
 
         for (int next : neighbors)
@@ -146,7 +146,7 @@ bool DFS(Graph *graph, char option, int vertex, ofstream *fout)
         }
     }
 
-    // 4) 방문 순서 출력
+    // Print DFS result order
     for (int i = 0; i < result.size(); i++)
     {
         *fout << result[i];
@@ -163,6 +163,7 @@ bool DFS(Graph *graph, char option, int vertex, ofstream *fout)
     return true;
 }
 
+// Find the root
 int Find(vector<int> &parent, int x)
 {
     if (parent[x] == x)
@@ -172,6 +173,7 @@ int Find(vector<int> &parent, int x)
     return parent[x] = Find(parent, parent[x]);
 }
 
+// Merge the sets containing nodes a and b
 void Union(vector<int> &parent, int a, int b)
 {
     a = Find(parent, a);
@@ -184,12 +186,12 @@ void Union(vector<int> &parent, int a, int b)
 
 bool Kruskal(Graph *graph, ofstream *fout)
 {
-    int n = graph->getSize();
+    int size = graph->getSize();
 
     vector<tuple<int, int, int>> edges;
 
-    // 1) 모든 간선 수집
-    for (int u = 0; u < n; u++)
+    // Collect all edges from the graph
+    for (int u = 0; u < size; u++)
     {
         map<int, int> adj;
         graph->getAdjacentEdges(u, &adj);
@@ -199,7 +201,7 @@ bool Kruskal(Graph *graph, ofstream *fout)
             int v = p.first;
             int w = p.second;
 
-            // 중복 제거
+            // Avoid duplicate edges
             if (u < v)
             {
                 edges.push_back({w, u, v});
@@ -207,26 +209,27 @@ bool Kruskal(Graph *graph, ofstream *fout)
         }
     }
 
+    // If no edges, can't make MST
     if (edges.empty())
     {
         return false;
     }
 
-    // 2) weight 기준 정렬
+    // Sort edges by weight in ascending order
     sort(edges.begin(), edges.end());
 
-    // 3) Union-Find 준비
-    vector<int> parent(n);
-    for (int i = 0; i < n; i++)
+    // Initialize Union-Find
+    vector<int> parent(size);
+    for (int i = 0; i < size; i++)
     {
         parent[i] = i;
     }
 
-    vector<vector<pair<int, int>>> mst_adj(n);
+    vector<vector<pair<int, int>>> mst_adj(size);
     int total_cost = 0;
     int used_edge = 0;
 
-    // 4) Kruskal 수행
+    // Process edges in increasing weight order
     for (auto &e : edges)
     {
         int w, u, v;
@@ -243,16 +246,16 @@ bool Kruskal(Graph *graph, ofstream *fout)
         }
     }
 
-    // MST가 완성되었는지 확인
-    if (used_edge != n - 1)
+    // Check MST maked
+    if (used_edge != size - 1)
     {
         return false;
     }
 
-    // 5) 출력
+    // Print
     *fout << "========KRUSKAL========" << endl;
 
-    for (int u = 0; u < n; u++)
+    for (int u = 0; u < size; u++)
     {
         *fout << "[" << u << "]";
         sort(mst_adj[u].begin(), mst_adj[u].end());
@@ -273,21 +276,16 @@ bool Kruskal(Graph *graph, ofstream *fout)
 
 bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
 {
-    int n = graph->getSize();
-    const int INF = 1e9;
+    int size = graph->getSize();
 
-    // ------------------------------
-    // [1] 음수 가중치가 있으면 Dijkstra 불가능 → false 반환
-    //     (그래프 전체에서 음수 간선이 있는지 검사)
-    // ------------------------------
-    for (int u = 0; u < n; u++)
+    // Check negative edges
+    for (int u = 0; u < size; u++)
     {
         map<int, int> adj;
-        graph->getAdjacentEdgesDirect(u, &adj); // 음수 검사에는 방향 중요하지 않음
+        graph->getAdjacentEdgesDirect(u, &adj);
 
         for (auto &p : adj)
         {
-            // 음수 가중치 존재
             if (p.second < 0)
             {
                 return false;
@@ -295,40 +293,36 @@ bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
         }
     }
 
-    // ------------------------------
-    // [2] Dijkstra 준비
-    // ------------------------------
-    vector<int> dist(n, INF); // 최단 거리
-    vector<int> prev(n, -1);  // 경로 복원용
+    vector<int> dist(size, INF);
+    vector<int> prev(size, -1);
     priority_queue<pair<int, int>,
                    vector<pair<int, int>>,
                    greater<pair<int, int>>>
         pq;
 
-    // 시작점 설정
     dist[vertex] = 0;
     pq.push({0, vertex});
 
-    // ------------------------------
-    // [4] Dijkstra 실행
-    // ------------------------------
+    // Dijkstra algorithm loop
     while (!pq.empty())
     {
         auto [cost, cur] = pq.top();
         pq.pop();
 
+        // Skip outdated entries
         if (cost > dist[cur])
+        {
             continue;
+        }
 
-        // 인접 정점들 가져오기
         map<int, int> adj;
 
         if (option == 'O')
-            graph->getAdjacentEdgesDirect(cur, &adj); // 방향 O
+            graph->getAdjacentEdgesDirect(cur, &adj);
         else
-            graph->getAdjacentEdges(cur, &adj); // 방향 X (무방향)
+            graph->getAdjacentEdges(cur, &adj);
 
-        // Relaxation
+        // Relax edges
         for (auto &p : adj)
         {
             int next = p.first;
@@ -343,9 +337,6 @@ bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
         }
     }
 
-    // ------------------------------
-    // [5] 결과 출력 시작
-    // ------------------------------
     *fout << "========DIJKSTRA========" << endl;
 
     if (option == 'O')
@@ -355,30 +346,26 @@ bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
 
     *fout << "Start: " << vertex << endl;
 
-    // ------------------------------
-    // [6] 각 정점에 대해 경로 출력
-    // ------------------------------
-    for (int v = 0; v < n; v++)
+    // Print result for each vertex
+    for (int v = 0; v < size; v++)
     {
         *fout << "[" << v << "] ";
 
         if (dist[v] == INF)
         {
-            // 도달 불가능
+            // Unreachable vertex
             *fout << "x" << endl;
             continue;
         }
 
-        // dist[v] == 0 → 시작 정점
+        // Starting vertex
         if (v == vertex)
         {
             *fout << v << " (0)" << endl;
             continue;
         }
 
-        // ------------------------------
-        // 경로 복원 (역순)
-        // ------------------------------
+        // Restore shortest path by tracing predecessors
         vector<int> path;
         int cur = v;
 
@@ -390,9 +377,7 @@ bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
 
         reverse(path.begin(), path.end());
 
-        // ------------------------------
-        // 경로 출력
-        // ------------------------------
+        // Print restored path
         for (int i = 0; i < path.size(); i++)
         {
             *fout << path[i];
@@ -411,12 +396,341 @@ bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
 
 bool Bellmanford(Graph *graph, char option, int s_vertex, int e_vertex, ofstream *fout)
 {
+    int size = graph->getSize();
+
+    // Build a list of all edges in the graph (u, v, weight)
+    vector<tuple<int, int, int>> edges;
+
+    for (int u = 0; u < size; u++)
+    {
+        map<int, int> adj;
+
+        if (option == 'O')
+        {
+            graph->getAdjacentEdgesDirect(u, &adj);
+        }
+        else
+        {
+            graph->getAdjacentEdges(u, &adj);
+        }
+
+        for (auto &p : adj)
+        {
+            int v = p.first;
+            int w = p.second;
+            edges.push_back({u, v, w});
+        }
+    }
+
+    // Initialize Bellmanford
+    vector<int> dist(size, INF);
+    vector<int> prev(size, -1);
+
+    dist[s_vertex] = 0;
+
+    // Relax all edges
+    for (int i = 0; i < size - 1; i++)
+    {
+        bool updated = false;
+
+        for (auto &e : edges)
+        {
+            int u, v, w;
+            tie(u, v, w) = e;
+
+            if (dist[u] != INF && dist[v] > dist[u] + w)
+            {
+                dist[v] = dist[u] + w;
+                prev[v] = u;
+                updated = true;
+            }
+        }
+
+        if (!updated)
+        {
+            break;
+        }
+    }
+
+    // Check for a negative cycle
+    for (auto &e : edges)
+    {
+        int u, v, w;
+        tie(u, v, w) = e;
+
+        if (dist[u] != INF && dist[v] > dist[u] + w)
+        {
+            return false;
+        }
+    }
+
+    *fout << "========BELLMANFORD========" << endl;
+
+    if (option == 'O')
+        *fout << "Directed Graph Bellman-Ford" << endl;
+    else
+        *fout << "Undirected Graph Bellman-Ford" << endl;
+
+    // If destination is unreachable, print x.
+    if (dist[e_vertex] == INF)
+    {
+        *fout << "x" << endl;
+        *fout << "Cost: x" << endl;
+        *fout << "====================" << endl
+              << endl;
+        return true;
+    }
+
+    // Restore path from s_vertex to e_vertex
+    vector<int> path;
+    int cur = e_vertex;
+
+    while (cur != -1)
+    {
+        path.push_back(cur);
+        cur = prev[cur];
+    }
+
+    reverse(path.begin(), path.end());
+
+    // Print path
+    for (int i = 0; i < path.size(); i++)
+    {
+        *fout << path[i];
+        if (i != path.size() - 1)
+            *fout << " -> ";
+    }
+    *fout << endl;
+
+    // Print cost
+    *fout << "Cost: " << dist[e_vertex] << endl;
+    *fout << "====================" << endl;
+    *fout << endl;
+
+    return true;
 }
 
 bool FLOYD(Graph *graph, char option, ofstream *fout)
 {
+    int size = graph->getSize();
+    const int INF = 1e9;
+
+    // Initialize distance matrix.
+    vector<vector<int>> dist(size, vector<int>(size, INF));
+
+    for (int i = 0; i < size; i++)
+    {
+        dist[i][i] = 0;
+    }
+
+    // Load initial edge weights from the graph into dist matrix
+    for (int u = 0; u < size; u++)
+    {
+        map<int, int> adj;
+
+        if (option == 'O')
+        {
+            graph->getAdjacentEdgesDirect(u, &adj);
+        }
+        else
+        {
+            graph->getAdjacentEdges(u, &adj);
+        }
+
+        for (auto &p : adj)
+        {
+            int v = p.first;
+            int w = p.second;
+            dist[u][v] = w;
+        }
+    }
+
+    // Floyd algorithm
+    for (int k = 0; k < size; k++)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                if (dist[i][k] == INF || dist[k][j] == INF)
+                {
+                    continue;
+                }
+
+                if (dist[i][j] > dist[i][k] + dist[k][j])
+                {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+
+    // Check negative cycle
+    for (int i = 0; i < size; i++)
+    {
+        if (dist[i][i] < 0)
+        {
+            return false;
+        }
+    }
+
+    // Print result
+    *fout << "========FLOYD========" << endl;
+
+    if (option == 'O')
+        *fout << "Directed Graph Floyd" << endl;
+    else
+        *fout << "Undirected Graph Floyd" << endl;
+
+    *fout << "    ";
+    for (int j = 0; j < size; j++)
+    {
+        *fout << "[" << j << "] ";
+    }
+    *fout << endl;
+
+    // Print matrix
+    for (int i = 0; i < size; i++)
+    {
+        *fout << "[" << i << "] ";
+        for (int j = 0; j < size; j++)
+        {
+            if (dist[i][j] >= INF)
+            {
+                *fout << "x   ";
+            }
+            else
+            {
+                *fout << dist[i][j] << "   ";
+            }
+        }
+        *fout << endl;
+    }
+
+    *fout << "====================" << endl;
+    *fout << endl;
+
+    return true;
 }
 
 bool Centrality(Graph *graph, ofstream *fout)
 {
+    int n = graph->getSize();
+
+    // Initialize distance matrix
+    vector<vector<int>> dist(n, vector<int>(n, INF));
+
+    for (int i = 0; i < n; i++)
+    {
+        dist[i][i] = 0;
+    }
+
+    // Load edge weights from the graph
+    for (int u = 0; u < n; u++)
+    {
+        map<int, int> adj;
+        graph->getAdjacentEdges(u, &adj);
+
+        for (auto &p : adj)
+        {
+            int v = p.first;
+            int w = p.second;
+            dist[u][v] = w;
+        }
+    }
+
+    // Floyd algorithm
+    for (int k = 0; k < n; k++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (dist[i][k] == INF || dist[k][j] == INF)
+                {
+                    continue;
+                }
+
+                if (dist[i][j] > dist[i][k] + dist[k][j])
+                {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+
+    // Check negative cycle
+    for (int i = 0; i < n; i++)
+    {
+        if (dist[i][i] < 0)
+        {
+            return false;
+        }
+    }
+
+    // Compute closeness centrality for each vertex
+    vector<double> closeness(n, 0);
+    vector<int> denom(n, 0);     // denominator
+    vector<int> numer(n, n - 1); // numerator
+
+    for (int i = 0; i < n; i++)
+    {
+        long long sum = 0;
+        bool unreachable = false;
+
+        for (int j = 0; j < n; j++)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+
+            if (dist[i][j] == INF)
+            {
+                unreachable = true;
+                break;
+            }
+            sum += dist[i][j];
+        }
+
+        // If any vertex is unreachable, or sum = 0
+        if (unreachable || sum == 0)
+        {
+            closeness[i] = 0;
+            denom[i] = 1;
+            numer[i] = 0;
+        }
+        else
+        {
+            denom[i] = sum;
+            closeness[i] = double(n - 1) / sum;
+        }
+    }
+
+    // Find the maximum closeness value
+    double max_centrality = 0;
+    for (int i = 0; i < n; i++)
+    {
+        max_centrality = max(max_centrality, closeness[i]);
+    }
+
+    // Print result
+    *fout << "========CENTRALITY========" << endl;
+
+    for (int i = 0; i < n; i++)
+    {
+        *fout << "[" << i << "] " << numer[i] << "/" << denom[i];
+
+        if (abs(closeness[i] - max_centrality) < 1e-12 && max_centrality > 0)
+        {
+            *fout << " <- Most Central";
+        }
+
+        *fout << endl;
+    }
+
+    *fout << "====================" << endl;
+    *fout << endl;
+
+    return true;
 }
