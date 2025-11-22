@@ -306,8 +306,11 @@ bool Dijkstra(Graph *graph, char option, int vertex, ofstream *fout)
     // Dijkstra algorithm loop
     while (!pq.empty())
     {
-        auto [cost, cur] = pq.top();
+        pair<int, int> top = pq.top();
         pq.pop();
+
+        int cost = top.first;
+        int cur = top.second;
 
         // Skip outdated entries
         if (cost > dist[cur])
