@@ -628,7 +628,7 @@ bool Centrality(Graph *graph, ofstream *fout)
         dist[i][i] = 0;
     }
 
-    // Load edge weights from the graph
+    // Load adjacency
     for (int u = 0; u < n; u++)
     {
         map<int, int> adj;
@@ -642,7 +642,7 @@ bool Centrality(Graph *graph, ofstream *fout)
         }
     }
 
-    // Floyd algorithm
+    // Floyd
     for (int k = 0; k < n; k++)
     {
         for (int i = 0; i < n; i++)
@@ -662,7 +662,7 @@ bool Centrality(Graph *graph, ofstream *fout)
         }
     }
 
-    // Check negative cycle
+    // Negative cycle check
     for (int i = 0; i < n; i++)
     {
         if (dist[i][i] < 0)
@@ -671,10 +671,10 @@ bool Centrality(Graph *graph, ofstream *fout)
         }
     }
 
-    // Compute closeness centrality for each vertex
+    // Compute closeness
     vector<double> closeness(n, 0);
-    vector<int> denom(n, 0);     // denominator
-    vector<int> numer(n, n - 1); // numerator
+    vector<bool> is_unreachable(n, false);
+    vector<long long> denom(n, 0);
 
     for (int i = 0; i < n; i++)
     {
@@ -688,20 +688,19 @@ bool Centrality(Graph *graph, ofstream *fout)
                 continue;
             }
 
+            // Can't visit
             if (dist[i][j] == INF)
             {
                 unreachable = true;
                 break;
             }
+
             sum += dist[i][j];
         }
 
-        // If any vertex is unreachable, or sum = 0
-        if (unreachable || sum == 0)
+        if (unreachable)
         {
-            closeness[i] = 0;
-            denom[i] = 1;
-            numer[i] = 0;
+            is_unreachable[i] = true;
         }
         else
         {
@@ -710,23 +709,34 @@ bool Centrality(Graph *graph, ofstream *fout)
         }
     }
 
-    // Find the maximum closeness value
-    double max_centrality = 0;
+    // Find max centrality among reachable nodes
+    double max_cent = 0;
     for (int i = 0; i < n; i++)
     {
-        max_centrality = max(max_centrality, closeness[i]);
+        if (!is_unreachable[i])
+        {
+            max_cent = max(max_cent, closeness[i]);
+        }
     }
 
-    // Print result
+    // Print output
     *fout << "========CENTRALITY========" << endl;
 
     for (int i = 0; i < n; i++)
     {
-        *fout << "[" << i << "] " << numer[i] << "/" << denom[i];
+        *fout << "[" << i << "] ";
 
-        if (abs(closeness[i] - max_centrality) < 1e-12 && max_centrality > 0)
+        if (is_unreachable[i])
         {
-            *fout << " <- Most Central";
+            *fout << "x";
+        }
+        else
+        {
+            *fout << (n - 1) << "/" << denom[i];
+            if (abs(closeness[i] - max_cent) < 1e-12 && max_cent > 0)
+            {
+                *fout << " <- Most Central";
+            }
         }
 
         *fout << endl;
