@@ -101,14 +101,14 @@ Start: 1
 
 ========BELLMANFORD========
 Directed Graph Bellman-Ford
-x
-Cost: x
+0 -> 1 -> 4
+Cost: 6
 ====================
 
 ========BELLMANFORD========
 Undirected Graph Bellman-Ford
-10 -> 11 -> 8
-Cost: 3
+0 -> 1 -> 4
+Cost: 6
 ====================
 
 ========FLOYD========

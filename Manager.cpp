@@ -36,62 +36,235 @@ void Manager::run(const char *command_txt)
 
 	while (fin >> cmd)
 	{
+		string rest;	   // For checking extra arguments
+		bool valid = true; // For checking argument validity
+
 		if (cmd == "LOAD")
 		{
 			string filename;
-			fin >> filename;
+			if (!(fin >> filename))
+			{
+				printErrorCode(100);
+				fin.clear();
+				getline(fin, rest);
+				continue;
+			}
+
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(100);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			LOAD(filename.c_str());
 		}
 		else if (cmd == "PRINT")
 		{
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(200);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			PRINT();
 		}
 		else if (cmd == "BFS")
 		{
 			char option;
 			int vertex;
-			fin >> option >> vertex;
+
+			if (!(fin >> option >> vertex))
+			{
+				printErrorCode(300);
+				fin.clear();
+				getline(fin, rest);
+				continue;
+			}
+
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(300);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			mBFS(option, vertex);
 		}
 		else if (cmd == "DFS")
 		{
 			char option;
 			int vertex;
-			fin >> option >> vertex;
+
+			if (!(fin >> option >> vertex))
+			{
+				printErrorCode(400);
+				fin.clear();
+				getline(fin, rest);
+				continue;
+			}
+
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(400);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			mDFS(option, vertex);
 		}
 		else if (cmd == "DIJKSTRA")
 		{
 			char option;
 			int vertex;
-			fin >> option >> vertex;
+
+			if (!(fin >> option >> vertex))
+			{
+				printErrorCode(600);
+				fin.clear();
+				getline(fin, rest);
+				continue;
+			}
+
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(600);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			mDIJKSTRA(option, vertex);
 		}
 		else if (cmd == "KRUSKAL")
 		{
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(500);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			mKRUSKAL();
 		}
 		else if (cmd == "BELLMANFORD")
 		{
 			char option;
 			int s, e;
-			fin >> option >> s >> e;
+
+			if (!(fin >> option >> s >> e))
+			{
+				printErrorCode(700);
+				fin.clear();
+				getline(fin, rest);
+				continue;
+			}
+
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(700);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			mBELLMANFORD(option, s, e);
 		}
 		else if (cmd == "FLOYD")
 		{
 			char option;
-			fin >> option;
+
+			if (!(fin >> option))
+			{
+				printErrorCode(800);
+				fin.clear();
+				getline(fin, rest);
+				continue;
+			}
+
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(800);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			mFLOYD(option);
 		}
 		else if (cmd == "CENTRALITY")
 		{
+			getline(fin, rest);
+			for (char c : rest)
+			{
+				if (!isspace(c))
+				{
+					printErrorCode(900);
+					valid = false;
+					break;
+				}
+			}
+			if (!valid)
+				continue;
+
 			mCentrality();
 		}
 		else if (cmd == "EXIT")
 		{
+			getline(fin, rest);
 			EXIT();
 			break;
+		}
+		else
+		{
+			getline(fin, rest);
+			continue;
 		}
 	}
 
@@ -101,7 +274,6 @@ void Manager::run(const char *command_txt)
 
 bool Manager::LOAD(const char *filename)
 {
-
 	ifstream fin(filename);
 	if (!fin.is_open())
 	{
@@ -375,6 +547,6 @@ void Manager::printErrorCode(int n)
 {
 	fout << "========ERROR=======" << endl;
 	fout << n << endl;
-	fout << "====================" << endl
-		 << endl;
+	fout << "====================" << endl;
+	fout << endl;
 }
